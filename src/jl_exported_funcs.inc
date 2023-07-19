@@ -606,6 +606,6 @@
     YY(JLJITGetIRCompileLayer) \
 
 #define JL_INSTRUMENTATION_EXPORTED_FUNCS(YY) \
-    YY(jl_timing_enabled) \
+    YY(jl_timing_available) \
 
 // end of file
