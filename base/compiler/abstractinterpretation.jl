@@ -791,11 +791,16 @@ function abstract_call_method_with_const_args(interp::AbstractInterpreter,
         return nothing
     end
     eligibility = concrete_eval_eligible(interp, f, result, arginfo, sv)
+    concrete_eval_result = nothing
     if eligibility === :concrete_eval
-        return concrete_eval_call(interp, f, result, arginfo, sv, invokecall)
+        concrete_eval_result = concrete_eval_call(interp, f, result, arginfo, sv, invokecall)
+        if !may_optimize(interp) || may_inline_concrete_result(concrete_eval_result.const_result::ConcreteResult)
+            return concrete_eval_result
+        end
+        # give semi-concrete-eval or const-prop' a chance to inline a better method body
     end
     mi = maybe_get_const_prop_profitable(interp, result, f, arginfo, si, match, sv)
-    mi === nothing && return nothing
+    mi === nothing && return concrete_eval_result
     if is_constprop_recursed(result, mi, sv)
         add_remark!(interp, sv, "[constprop] Edge cycle encountered")
         return nothing
