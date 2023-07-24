@@ -580,7 +580,7 @@
     YY(LLVMExtraAddCPUFeaturesPass) \
     YY(LLVMExtraMPMAddCPUFeaturesPass) \
     YY(LLVMExtraMPMAddRemoveNIPass) \
-    YY(LLVMExtraMPMAddLowerSIMDLoopPass) \
+    YY(LLVMExtraLPMAddLowerSIMDLoopPass) \
     YY(LLVMExtraMPMAddFinalLowerGCPass) \
     YY(LLVMExtraMPMAddMultiVersioningPass) \
     YY(LLVMExtraMPMAddRemoveJuliaAddrspacesPass) \
