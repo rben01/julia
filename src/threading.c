@@ -702,9 +702,12 @@ int jl_process_events_locked(void);
 void jl_utility_io_threadfun(void *arg) {
     while (1) {
         // Only reader of the rwlock, according to libuv lock is writer-biased
-        uv_rwlock_rdlock(&jl_uv_rwlock); // Investigate trylock + spin?
-        jl_process_events_locked();
-        uv_rwlock_rdunlock(&jl_uv_rwlock);
+        if (uv_rwlock_tryrdlock(&jl_uv_rwlock))
+        {
+            jl_process_events_locked();
+            uv_rwlock_rdunlock(&jl_uv_rwlock);
+        }
+        jl_cpu_pause(); // suspend here and wake on IO_UNLOCK
     }
     return;
 }

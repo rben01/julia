@@ -108,6 +108,14 @@ void jl_wake_libuv(void)
 
 uv_rwlock_t jl_uv_rwlock;
 
+void JL_UV_LOCK(void)
+{
+    while (!uv_rwlock_trywrlock(&jl_uv_rwlock)) {
+        jl_wake_libuv();
+        jl_cpu_pause();
+    }
+}
+
 void jl_init_uv(void)
 {
     uv_async_init(jl_io_loop, &signal_async, jl_signal_async_cb);

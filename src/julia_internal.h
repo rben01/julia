@@ -179,7 +179,7 @@ extern JL_DLLEXPORT uintptr_t __stack_chk_guard;
 static uv_loop_t *const unused_uv_loop_arg = (uv_loop_t *)0xBAD10;
 
 extern uv_rwlock_t jl_uv_rwlock;
-#define JL_UV_LOCK() uv_rwlock_wrlock(&jl_uv_rwlock);
+void JL_UV_LOCK(void);
 #define JL_UV_UNLOCK() uv_rwlock_wrunlock(&jl_uv_rwlock);
 
 #ifdef __cplusplus
