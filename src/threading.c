@@ -700,6 +700,18 @@ void jl_init_threading(void)
 
 int jl_process_events_locked(void);
 void jl_utility_io_threadfun(void *arg) {
+    jl_threadarg_t *targ = (jl_threadarg_t*)arg;
+
+    // initialize this thread (set tid and create heap)
+    jl_ptls_t ptls = jl_init_threadtls(targ->tid);
+
+    // wait for all threads
+    jl_gc_state_set(ptls, JL_GC_STATE_WAITING, 0);
+    uv_barrier_wait(targ->barrier);
+
+    // free the thread argument here
+    free(targ);
+
     while (1) {
         // Only reader of the rwlock, according to libuv lock is writer-biased
         if (uv_rwlock_tryrdlock(&jl_uv_rwlock))
@@ -773,11 +785,13 @@ void jl_start_threads(void)
         }
         uv_thread_detach(&uvtid);
     }
-    jl_threadarg_t *t = (jl_threadarg_t *)malloc_s(sizeof(jl_threadarg_t)); // ownership will be passed to the thread
-    t->tid = i;
-    t->barrier = &thread_init_done;
-    uv_thread_create(&uvtid, jl_gc_mark_threadfun, t);
-    uv_thread_detach(&uvtid);
+    if (nthreads != 1) {
+        jl_threadarg_t *t = (jl_threadarg_t *)malloc_s(sizeof(jl_threadarg_t)); // ownership will be passed to the thread
+        t->tid = nthreads + 1;
+        t->barrier = &thread_init_done;
+        uv_thread_create(&uvtid, jl_utility_io_threadfun, t);
+        uv_thread_detach(&uvtid);
+    }
 
     uv_barrier_wait(&thread_init_done);
 }
