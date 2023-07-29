@@ -698,6 +698,17 @@ void jl_init_threading(void)
     gc_first_tid = nthreads;
 }
 
+int jl_process_events_locked(void);
+void jl_utility_io_threadfun(void *arg) {
+    while (1) {
+        // Only reader of the rwlock, according to libuv lock is writer-biased
+        uv_rwlock_rdlock(&jl_uv_rwlock); // Investigate trylock + spin?
+        jl_process_events_locked();
+        uv_rwlock_rdunlock(&jl_uv_rwlock);
+    }
+    return;
+}
+
 static uv_barrier_t thread_init_done;
 
 void jl_start_threads(void)
@@ -759,6 +770,11 @@ void jl_start_threads(void)
         }
         uv_thread_detach(&uvtid);
     }
+    jl_threadarg_t *t = (jl_threadarg_t *)malloc_s(sizeof(jl_threadarg_t)); // ownership will be passed to the thread
+    t->tid = i;
+    t->barrier = &thread_init_done;
+    uv_thread_create(&uvtid, jl_gc_mark_threadfun, t);
+    uv_thread_detach(&uvtid);
 
     uv_barrier_wait(&thread_init_done);
 }

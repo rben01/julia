@@ -178,10 +178,9 @@ extern JL_DLLEXPORT uintptr_t __stack_chk_guard;
 // provided and with JL_UV_LOCK used around the calls
 static uv_loop_t *const unused_uv_loop_arg = (uv_loop_t *)0xBAD10;
 
-extern jl_mutex_t jl_uv_mutex;
-extern _Atomic(int) jl_uv_n_waiters;
-void JL_UV_LOCK(void);
-#define JL_UV_UNLOCK() JL_UNLOCK(&jl_uv_mutex)
+extern uv_rwlock_t jl_uv_rwlock;
+#define JL_UV_LOCK() uv_rwlock_wrlock(&jl_uv_rwlock);
+#define JL_UV_UNLOCK() uv_rwlock_wrunlock(&jl_uv_rwlock);
 
 #ifdef __cplusplus
 extern "C" {
